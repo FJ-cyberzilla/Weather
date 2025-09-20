@@ -1,0 +1,203 @@
+# Compiled binaries
+weather-cli
+weather-cli.exe
+weather_cli
+weather_cli.exe
+*.out
+*.app
+
+# Object files
+*.o
+*.obj
+*.lo
+*.slo
+*.ko
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Static analysis
+*.scan
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
+# Build directories
+build/
+Build/
+BUILD/
+debug/
+Debug/
+DEBUG/
+release/
+Release/
+RELEASE/
+out/
+bin/
+obj/
+
+# IDE files
+.vscode/
+.vs/
+*.vcxproj*
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Configuration files with sensitive data
+weather_cli_config.json
+config.json
+*.env
+.env
+.env.local
+.env.production
+.env.development
+
+# Log files
+*.log
+weather_cli.log
+debug.log
+error.log
+
+# Cache files
+*.cache
+cache/
+.cache/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Test files
+test_output/
+test_results/
+*.test
+
+# Package managers
+conan.lock
+vcpkg_installed/
+
+# Documentation build
+docs/build/
+site/
+
+# Downloaded dependencies
+include/nlohmann/
+third_party/
+vendor/
+libs/
+
+# Generated reports
+weather_report*.txt
+*.report
+
+# Profiling data
+*.prof
+gmon.out
+perf.data*
+
+# Coverage reports
+*.gcov
+*.gcda
+*.gcno
+coverage/
+htmlcov/
+
+# Valgrind
+*.memcheck
+*.helgrind
+*.cachegrind
+*.callgrind
+
+# Sanitizer outputs
+*.san
+
+# Core dumps
+core
+core.*
+vgcore.*
