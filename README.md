@@ -1,15 +1,19 @@
-🌤️ Weather CLI Pro
+# 🌤️ Weather CLI Pro
 
 <div align="center">
 
-https://img.shields.io/badge/Weather-CLI%20Pro-blue?style=for-the-badge&logo=weather&logoColor=white/
+[![Weather CLI Pro](https://img.shields.io/badge/Weather-CLI%20Pro-blue?style=for-the-badge&logo=weather&logoColor=white)](https://github.com/FJ-cyberzilla/Weather)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)](https://github.com/FJ-cyberzilla/Weather)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Termux-lightgrey?style=flat-square)](https://github.com/FJ-cyberzilla/Weather)
+[![C++](https://img.shields.io/badge/C%2B%2B-17-blue?style=flat-square&logo=cplusplus)](https://isocpp.org/)
+[![WeatherAPI](https://img.shields.io/badge/WeatherAPI-Powered-orange?style=flat-square)](https://weatherapi.com/)
 
-https://img.shields.io/badge/build-passing-brightgreen?style=flat-square
-https://img.shields.io/badge/license-MIT-green?style=flat-square
-https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Termux-lightgrey?style=flat-square
-https://img.shields.io/badge/C%2B%2B-17-blue?style=flat-square&logo=cplusplus
-https://img.shields.io/badge/WeatherAPI-Powered-orange?style=flat-square
+**Professional Weather Intelligence Platform for Command Line**
 
+*Stay informed, stay safe with comprehensive weather data at your fingertips*
+
+</div>
 Professional Weather Intelligence Platform for Command Line
 
 Stay informed, stay safe with comprehensive weather data at your fingertips
