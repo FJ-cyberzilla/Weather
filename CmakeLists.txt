@@ -1,0 +1,392 @@
+# Weather CLI Pro - Professional CMakeLists.txt
+# Cross-platform build system with advanced features
+
+cmake_minimum_required(VERSION 3.16)
+
+# Project definition
+project(WeatherCLIPro 
+    VERSION 2.0.0
+    DESCRIPTION "Professional Weather Intelligence Platform for Command Line"
+    HOMEPAGE_URL "https://github.com/fj-cyberzilla/weather"
+    LANGUAGES CXX C
+)
+
+# Project metadata
+set(PROJECT_VENDOR "Weather CLI Pro Team")
+set(PROJECT_COPYRIGHT "Copyright (c) 2024 Weather CLI Pro Contributors")
+set(PROJECT_LICENSE "MIT License")
+
+#==================================================================================
+# Build Configuration
+#==================================================================================
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Build type configuration
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose build type" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
+# Platform detection
+if(UNIX AND NOT APPLE)
+    set(PLATFORM_LINUX TRUE)
+elseif(APPLE)
+    set(PLATFORM_MACOS TRUE)
+elseif(WIN32)
+    set(PLATFORM_WINDOWS TRUE)
+endif()
+
+# Special handling for Termux
+if(DEFINED ENV{TERMUX_VERSION})
+    set(PLATFORM_TERMUX TRUE)
+    set(PLATFORM_LINUX FALSE)
+    message(STATUS "Detected Termux environment")
+endif()
+
+#==================================================================================
+# Build Options
+#==================================================================================
+
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+option(BUILD_TESTING "Build tests" ON)
+option(ENABLE_STATIC_ANALYSIS "Enable static analysis" OFF)
+option(ENABLE_SANITIZERS "Enable sanitizers in debug build" ON)
+option(ENABLE_COLORS "Enable colored output" ON)
+option(ENABLE_LOGGING "Enable logging system" ON)
+option(ENABLE_CACHING "Enable API response caching" ON)
+option(ENABLE_PROFILING "Enable profiling support" OFF)
+option(USE_SYSTEM_CURL "Use system libcurl" ON)
+option(USE_SYSTEM_JSON "Use system nlohmann/json" ON)
+option(ENABLE_LTO "Enable Link Time Optimization" OFF)
+
+#==================================================================================
+# Compiler Configuration
+#==================================================================================
+
+# Compiler-specific settings
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(COMPILER_GCC TRUE)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(COMPILER_CLANG TRUE)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(COMPILER_MSVC TRUE)
+endif()
+
+# Base compiler flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+
+if(COMPILER_GCC OR COMPILER_CLANG)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
+    
+    # Additional warnings for better code quality
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow -Wnon-virtual-dtor -Wold-style-cast")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wcast-align -Wunused -Woverloaded-virtual")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpedantic -Wconversion -Wsign-conversion")
+endif()
+
+# Build type specific flags
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
+
+# Sanitizers for debug builds
+if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(COMPILER_GCC OR COMPILER_CLANG)
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined")
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
+        set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=address,undefined")
+    endif()
+endif()
+
+# Profiling support
+if(ENABLE_PROFILING)
+    if(COMPILER_GCC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+    endif()
+endif()
+
+# Link Time Optimization
+if(ENABLE_LTO AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+    if(ipo_supported)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+        message(STATUS "Link Time Optimization enabled")
+    else()
+        message(WARNING "LTO not supported: ${ipo_error}")
+    endif()
+endif()
+
+#==================================================================================
+# Dependencies
+#==================================================================================
+
+# Find required packages
+find_package(PkgConfig REQUIRED)
+find_package(Threads REQUIRED)
+
+# libcurl
+if(USE_SYSTEM_CURL)
+    find_package(CURL REQUIRED)
+    if(CURL_FOUND)
+        message(STATUS "Using system libcurl: ${CURL_VERSION_STRING}")
+    endif()
+else()
+    # Could add option to build curl from source here
+    message(FATAL_ERROR "Building libcurl from source not implemented")
+endif()
+
+# nlohmann/json
+if(USE_SYSTEM_JSON)
+    find_package(nlohmann_json QUIET)
+    if(NOT nlohmann_json_FOUND)
+        # Try pkg-config
+        pkg_check_modules(NLOHMANN_JSON nlohmann_json)
+        if(NOT NLOHMANN_JSON_FOUND)
+            message(STATUS "nlohmann/json not found, will download header-only version")
+            set(NEED_DOWNLOAD_JSON TRUE)
+        endif()
+    endif()
+else()
+    set(NEED_DOWNLOAD_JSON TRUE)
+endif()
+
+# Download nlohmann/json if needed
+if(NEED_DOWNLOAD_JSON)
+    include(FetchContent)
+    
+    FetchContent_Declare(
+        nlohmann_json
+        URL https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp
+        DOWNLOAD_NO_EXTRACT TRUE
+    )
+    
+    FetchContent_MakeAvailable(nlohmann_json)
+    
+    # Create include directory
+    set(JSON_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include/nlohmann")
+    file(MAKE_DIRECTORY "${JSON_INCLUDE_DIR}")
+    
+    # Copy header to proper location
+    file(COPY "${nlohmann_json_SOURCE_DIR}/json.hpp" 
+         DESTINATION "${JSON_INCLUDE_DIR}")
+    
+    message(STATUS "Downloaded nlohmann/json header-only library")
+endif()
+
+#==================================================================================
+# Target Definition
+#==================================================================================
+
+# Source files
+set(SOURCES
+    weather_cli.cpp
+)
+
+# Create main executable
+add_executable(weather-cli ${SOURCES})
+
+# Target properties
+set_target_properties(weather-cli PROPERTIES
+    OUTPUT_NAME "weather-cli"
+    VERSION ${PROJECT_VERSION}
+    DESCRIPTION "${PROJECT_DESCRIPTION}"
+)
+
+# Include directories
+target_include_directories(weather-cli PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(NEED_DOWNLOAD_JSON)
+    target_include_directories(weather-cli PRIVATE
+        "${CMAKE_BINARY_DIR}/include"
+    )
+endif()
+
+# Link libraries
+target_link_libraries(weather-cli PRIVATE
+    CURL::libcurl
+    Threads::Threads
+)
+
+if(nlohmann_json_FOUND AND NOT NEED_DOWNLOAD_JSON)
+    target_link_libraries(weather-cli PRIVATE nlohmann_json::nlohmann_json)
+endif()
+
+# Platform-specific libraries
+if(PLATFORM_WINDOWS)
+    target_link_libraries(weather-cli PRIVATE ws2_32)
+endif()
+
+if(PLATFORM_LINUX OR PLATFORM_TERMUX)
+    target_link_libraries(weather-cli PRIVATE dl)
+endif()
+
+#==================================================================================
+# Feature Configuration
+#==================================================================================
+
+# Compile definitions based on options
+if(ENABLE_COLORS)
+    target_compile_definitions(weather-cli PRIVATE ENABLE_COLORS=1)
+endif()
+
+if(ENABLE_LOGGING)
+    target_compile_definitions(weather-cli PRIVATE ENABLE_LOGGING=1)
+endif()
+
+if(ENABLE_CACHING)
+    target_compile_definitions(weather-cli PRIVATE ENABLE_CACHING=1)
+endif()
+
+# Version information
+target_compile_definitions(weather-cli PRIVATE
+    VERSION="${PROJECT_VERSION}"
+    PROJECT_NAME="${PROJECT_NAME}"
+    BUILD_DATE="${CMAKE_CURRENT_TIMESTAMP}"
+)
+
+#==================================================================================
+# Testing
+#==================================================================================
+
+if(BUILD_TESTING)
+    enable_testing()
+    
+    # Basic functionality test
+    add_test(NAME BasicHelp
+             COMMAND weather-cli --help)
+    
+    add_test(NAME BasicVersion  
+             COMMAND weather-cli --version)
+    
+    # Set test properties
+    set_tests_properties(BasicHelp BasicVersion PROPERTIES
+        TIMEOUT 30
+        WILL_FAIL FALSE
+    )
+    
+    # Memory test (if valgrind available)
+    find_program(VALGRIND_EXECUTABLE valgrind)
+    if(VALGRIND_EXECUTABLE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_test(NAME MemoryCheck
+                 COMMAND ${VALGRIND_EXECUTABLE} --leak-check=full --error-exitcode=1
+                         $<TARGET_FILE:weather-cli> --help)
+    endif()
+endif()
+
+#==================================================================================
+# Static Analysis
+#==================================================================================
+
+if(ENABLE_STATIC_ANALYSIS)
+    # Find static analysis tools
+    find_program(CPPCHECK_EXECUTABLE cppcheck)
+    find_program(CLANG_TIDY_EXECUTABLE clang-tidy)
+    
+    if(CPPCHECK_EXECUTABLE)
+        add_custom_target(cppcheck
+            COMMAND ${CPPCHECK_EXECUTABLE}
+                --enable=all
+                --suppress=missingIncludeSystem
+                --suppress=unusedFunction
+                --error-exitcode=1
+                ${SOURCES}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMENT "Running cppcheck static analysis"
+        )
+    endif()
+    
+    if(CLANG_TIDY_EXECUTABLE)
+        set_target_properties(weather-cli PROPERTIES
+            CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};--checks=*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-llvm-*"
+        )
+    endif()
+endif()
+
+#==================================================================================
+# Installation
+#==================================================================================
+
+include(GNUInstallDirs)
+
+# Install executable
+install(TARGETS weather-cli
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT Runtime
+)
+
+# Install documentation
+install(FILES README.md LICENSE
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
+    COMPONENT Documentation
+    OPTIONAL
+)
+
+# Create uninstall target
+if(NOT TARGET uninstall)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+        IMMEDIATE @ONLY
+    )
+    
+    add_custom_target(uninstall
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake
+        COMMENT "Uninstalling Weather CLI Pro"
+    )
+endif()
+
+#==================================================================================
+# Packaging
+#==================================================================================
+
+include(InstallRequiredSystemLibraries)
+
+set(CPACK_PACKAGE_NAME "WeatherCLIPro")
+set(CPACK_PACKAGE_VENDOR "${PROJECT_VENDOR}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_DESCRIPTION}")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+
+# Platform-specific packaging
+if(PLATFORM_LINUX OR PLATFORM_TERMUX)
+    set(CPACK_GENERATOR "TGZ;DEB;RPM")
+    
+    # DEB specific
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libcurl4 (>= 7.0), libc6 (>= 2.17)")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Weather CLI Pro Team")
+    set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
+    set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+    
+    # RPM specific  
+    set(CPACK_RPM_PACKAGE_REQUIRES "libcurl >= 7.0")
+    set(CPACK_RPM_PACKAGE_GROUP "Applications/Internet")
+    set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+    
+elseif(PLATFORM_MACOS)
+    set(CPACK_GENERATOR "TGZ;ZIP")
+    
+elseif(PLATFORM_WINDOWS)
+    set(CPACK_GENERATOR "ZIP;NSIS")
+    
+    # NSIS specific
+    set(CPACK_NSIS_PACKAGE_NAME "Weather CLI Pro")
+    set(CPACK_NSIS_DISPLAY_NAME "Weather CLI Pro")
+    set(CPACK_NSIS_CONTACT "weather-cli-pro@example.com")
+    set(CPACK_NSIS_MODIFY_PATH ON)
+endif()
+
+include(CPack)
