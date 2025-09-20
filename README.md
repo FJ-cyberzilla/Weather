@@ -2,7 +2,7 @@
 
 <div align="center">
 
-https://img.shields.io/badge/Weather-CLI%20Pro-blue?style=for-the-badge&logo=weather&logoColor=white
+https://img.shields.io/badge/Weather-CLI%20Pro-blue?style=for-the-badge&logo=weather&logoColor=white/
 
 https://img.shields.io/badge/build-passing-brightgreen?style=flat-square
 https://img.shields.io/badge/license-MIT-green?style=flat-square
